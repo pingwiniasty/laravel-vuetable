@@ -31,6 +31,7 @@ class EloquentVuetableBuilder extends BaseBuilder
     {
         $results = $this
             ->sort()
+            ->search()
             ->filter()
             ->paginate();
 
@@ -74,17 +75,30 @@ class EloquentVuetableBuilder extends BaseBuilder
      */
     public function filter()
     {
-        if (!$this->request->input('searchable') || !$this->request->input('filter')) {
+        if (empty($this->getFilters())) {
             return $this;
         }
 
-        $filterText = "%{$this->request->input('filter')}%";
-
-        $this->query->where(function ($query) use ($filterText) {
-            foreach ($this->request->input('searchable') as $column) {
-                $query->orWhere($column, 'like', $filterText);
+        $this->query->where(function ($query) {
+            foreach ($this->getFilters() as $column=>$filter) {
+                $query->orWhere($column, 'like', "%{$filter}%");
             }
         });
+
+        return $this;
+    }
+
+    public function search()
+    {
+        if($this->request->filled('search') && $this->request->filled('searchable'))
+        {
+            $searchText = $this->request->get('search');
+            $this->query->where(function($query) use ($searchText) {
+                foreach($this->request->get('searchable') as $column) {
+                    $query->orWhere($column,'like',"%{$searchText}%");
+                }
+            });
+        }
 
         return $this;
     }

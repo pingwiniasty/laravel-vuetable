@@ -53,4 +53,21 @@ abstract class BaseBuilder
 
         return $this;
     }
+
+    protected function getFilters()
+    {
+        $newFilters = [];
+        if($this->request->filled('filters') == false)
+        {
+            return $newFilters;
+        }
+
+        foreach($this->request->get('filters') as $filter)
+        {
+            list($column,$value) = explode("|",$filter);
+            $newFilters[$column] = $value;
+        }
+
+        return $newFilters;
+    }
 }
